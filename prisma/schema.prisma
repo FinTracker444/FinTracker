@@ -1,0 +1,54 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL") // Your NeonDB connection string
+}
+
+model USER {
+  UserId     String      @id @default(uuid())
+  userName   String
+  email      String      @unique
+  password   String
+
+  monthly    Monthly[]
+  categories Categories[]
+}
+
+model Monthly {
+  Month     Int
+  Year      Int
+  userId    String
+  Salary    Float
+
+  user      USER       @relation(fields: [userId], references: [UserId], onDelete: Cascade)
+  categories Categories[]
+
+  @@id([Month, Year, userId])
+}
+
+model Categories {
+  catId         String   @id @default(uuid())
+  Month         Int
+  Year          Int
+  userId        String
+  CategoryName  String
+  SoftLimit     Float     // Represented as 0.5 for 50%
+
+  // Relations
+  monthly       Monthly   @relation(fields: [Month, Year, userId], references: [Month, Year, userId], onDelete: Cascade)
+  user          USER      @relation(fields: [userId], references: [UserId], onDelete: Cascade)
+  spendings     CategorySpendings[]
+}
+
+model CategorySpendings {
+  spendingId   String     @id @default(uuid())
+  catId        String
+  spendingName String
+  spendings    Float
+  remaining    Float
+
+  category     Categories @relation(fields: [catId], references: [catId], onDelete: Cascade)
+}
